@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
+import pathlib
 
 # Nastavenie stránky
 st.set_page_config(page_title="Regresné modely v ekonómii", layout="wide")
@@ -17,7 +18,8 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 else:
     st.info("Používa sa predvolený dataset o vývoji priemernej mzdy na Slovensku (2001–2024).")
-    df = pd.read_excel(r"C:\Users\Martin\Desktop\škola\diplomovka\prakticka časť\dataset.xlsx")
+    default_path = pathlib.Path("dataset.xlsx")  # predpokladá, že súbor je v rovnakom priečinku
+    df = pd.read_excel(default_path)
 
 # Zobrazenie dát
 if st.checkbox("Zobraziť nahrané dáta"):
