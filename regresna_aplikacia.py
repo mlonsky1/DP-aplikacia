@@ -30,14 +30,15 @@ df = pd.concat([df, quarter_dummies], axis=1)
 
 # Možnosť zvoliť knižnicu
 model_choice = st.sidebar.selectbox("Vyber knižnicu na odhad", ["statsmodels", "sklearn", "patsy"])
-st.sidebar.write("Zvolený model:", model_choice)
-
 
 # Voľba vstupných premenných (okrem závislej)
 available_vars = [col for col in df.columns if col != "miera_nezamestanosti"]
 selected_vars = st.sidebar.multiselect("Vyber nezávislé premenné", available_vars, default=["hdp_o_std"] + [col for col in df.columns if col.startswith("Q_")])
 
-if selected_vars:
+# Tlačidlo na spustenie analýzy
+run_model = st.sidebar.button("▶️ Vykonať analýzu")
+
+if run_model and selected_vars:
     st.subheader("📉 Výstup regresného modelu")
 
     if model_choice == "patsy":
@@ -80,5 +81,6 @@ if selected_vars:
     ax.set_ylabel("Miera nezamestnanosti (%)")
     ax.legend()
     st.pyplot(fig)
-else:
+
+elif not selected_vars:
     st.warning("Prosím, vyberte aspoň jednu vysvetľujúcu premennú v postrannom paneli.")
