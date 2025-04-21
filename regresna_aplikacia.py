@@ -5,46 +5,65 @@ import seaborn as sns
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 
-# Nastavenie rozhrania
+# Konfigurácia vzhľadu stránky
 st.set_page_config(page_title="Ekonomické regresné modely", layout="wide")
-st.title("Regresná analýza miery nezamestnanosti")
 
-# Načítanie preddefinovaného datasetu
+# Vítací nadpis
+st.title("\U0001F4C8 Regresná analýza miery nezamestnanosti")
+st.markdown("""
+Táto aplikácia umožňuje analyzovať mieru nezamestnanosti na základe reálneho HDP a sezónnych efektov.
+Vyberte požadovanú regresnú knižnicu a premenné v postrannom paneli.
+""")
+
+# Postranný panel
+st.sidebar.header("\U0001F4CA Nastavenie modelu")
+
+# Načítanie datasetu
 df = pd.read_csv("updated_dataset_with_hdp_o.csv")
-
-# Pred¾arobenie potrebných premenných
 df["miera_nezamestanosti"] = df["miera_nezamestanosti"].astype(str).str.replace(",", ".").astype(float)
 df["hdp_o"] = df["hdp_o"].astype(str).str.replace(",", ".").astype(float)
 df["hdp_o_std"] = (df["hdp_o"] - df["hdp_o"].mean()) / df["hdp_o"].std()
 df["kvartal"] = df["kvartal"].astype(str).str.strip()
-
-# Tvorba dummy premenných s referenčnou kategóriou Q1
 quarter_dummies = pd.get_dummies(df["kvartal"], prefix="Q")
 df = pd.concat([df, quarter_dummies], axis=1)
 
-# Pripravené vysvetľujúce premenné
-X = df[["hdp_o_std", "Q_2Q", "Q_3Q", "Q_4Q"]].apply(pd.to_numeric, errors="coerce")
-y = pd.to_numeric(df["miera_nezamestanosti"], errors="coerce")
+# Možnosť zvoliť knižnicu
+model_choice = st.sidebar.selectbox("Vyber knižnicu na odhad", ["statsmodels", "sklearn"])
 
-# Odstránenie riadkov s chýbajúcimi alebo objektovými hodnotami
-X = X.dropna().astype(float)
-y = y.loc[X.index].astype(float)
+# Voľba vstupných premenných
+available_vars = ["hdp_o_std"] + [col for col in df.columns if col.startswith("Q_")]
+selected_vars = st.sidebar.multiselect("Vyber nezávislé premenné", available_vars, default=available_vars)
 
-# OLS model cez statsmodels
-X_const = sm.add_constant(X)
-model = sm.OLS(y, X_const).fit(cov_type='HAC', cov_kwds={'maxlags': 4})
+if selected_vars:
+    X = df[selected_vars].apply(pd.to_numeric, errors="coerce")
+    y = pd.to_numeric(df["miera_nezamestanosti"], errors="coerce")
+    X = X.dropna().astype(float)
+    y = y.loc[X.index].astype(float)
 
-# Zobrazenie modelu
-st.subheader("Štatistický výstup OLS modelu (statsmodels)")
-st.text(model.summary())
+    st.subheader("\U0001F4C9 Výstup regresného modelu")
 
-# Vizualizácia predikcií
-st.subheader("Vizualizácia predikovaných a skutočných hodnôt")
-y_pred = model.predict(X_const)
-fig, ax = plt.subplots(figsize=(10, 4))
-sns.lineplot(x=X.index, y=y, label="Skutočná nezamestnanosť", ax=ax)
-sns.lineplot(x=X.index, y=y_pred, label="Predikovaná nezamestnanosť", ax=ax)
-ax.set_xlabel("Index")
-ax.set_ylabel("Miera nezamestnanosti (%)")
-ax.legend()
-st.pyplot(fig)
+    if model_choice == "statsmodels":
+        X_const = sm.add_constant(X)
+        model = sm.OLS(y, X_const).fit(cov_type='HAC', cov_kwds={'maxlags': 4})
+        st.text(model.summary())
+        y_pred = model.predict(X_const)
+
+    elif model_choice == "sklearn":
+        model = LinearRegression()
+        model.fit(X, y)
+        y_pred = model.predict(X)
+        st.write(f"R² skóre: {model.score(X, y):.4f}")
+        st.write("Koeficienty:", dict(zip(X.columns, model.coef_)))
+        st.write("Intercept:", model.intercept_)
+
+    # Vizualizácia
+    st.subheader("\U0001F4CA Vizualizácia predikcií")
+    fig, ax = plt.subplots(figsize=(10, 4))
+    sns.lineplot(x=X.index, y=y, label="Skutočná nezamestnanosť", ax=ax)
+    sns.lineplot(x=X.index, y=y_pred, label="Predikovaná nezamestnanosť", ax=ax)
+    ax.set_xlabel("Index")
+    ax.set_ylabel("Miera nezamestnanosti (%)")
+    ax.legend()
+    st.pyplot(fig)
+else:
+    st.warning("Prosím, vyberte aspoň jednu vysvetľujúcu premennú v postrannom paneli.")
