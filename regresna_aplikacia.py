@@ -30,6 +30,8 @@ df = pd.concat([df, quarter_dummies], axis=1)
 
 # Možnosť zvoliť knižnicu
 model_choice = st.sidebar.selectbox("Vyber knižnicu na odhad", ["statsmodels", "sklearn", "patsy"])
+st.sidebar.write("Zvolený model:", model_choice)
+
 
 # Voľba vstupných premenných (okrem závislej)
 available_vars = [col for col in df.columns if col != "miera_nezamestanosti"]
