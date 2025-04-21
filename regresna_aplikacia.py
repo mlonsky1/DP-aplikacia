@@ -9,14 +9,14 @@ from sklearn.linear_model import LinearRegression
 st.set_page_config(page_title="Ekonomické regresné modely", layout="wide")
 
 # Vítací nadpis
-st.title("\U0001F4C8 Regresná analýza miery nezamestnanosti")
+st.title("📈 Regresná analýza miery nezamestnanosti")
 st.markdown("""
 Táto aplikácia umožňuje analyzovať mieru nezamestnanosti na základe reálneho HDP a sezónnych efektov.
 Vyberte požadovanú regresnú knižnicu a premenné v postrannom paneli.
 """)
 
 # Postranný panel
-st.sidebar.header("\U0001F4CA Nastavenie modelu")
+st.sidebar.header("📊 Nastavenie modelu")
 
 # Načítanie datasetu
 df = pd.read_csv("updated_dataset_with_hdp_o.csv")
@@ -30,9 +30,9 @@ df = pd.concat([df, quarter_dummies], axis=1)
 # Možnosť zvoliť knižnicu
 model_choice = st.sidebar.selectbox("Vyber knižnicu na odhad", ["statsmodels", "sklearn"])
 
-# Voľba vstupných premenných
-available_vars = ["hdp_o_std"] + [col for col in df.columns if col.startswith("Q_")]
-selected_vars = st.sidebar.multiselect("Vyber nezávislé premenné", available_vars, default=available_vars)
+# Voľba vstupných premenných (okrem závislej)
+available_vars = [col for col in df.columns if col != "miera_nezamestanosti"]
+selected_vars = st.sidebar.multiselect("Vyber nezávislé premenné", available_vars, default=["hdp_o_std"] + [col for col in df.columns if col.startswith("Q_")])
 
 if selected_vars:
     X = df[selected_vars].apply(pd.to_numeric, errors="coerce")
@@ -40,7 +40,7 @@ if selected_vars:
     X = X.dropna().astype(float)
     y = y.loc[X.index].astype(float)
 
-    st.subheader("\U0001F4C9 Výstup regresného modelu")
+    st.subheader("📉 Výstup regresného modelu")
 
     if model_choice == "statsmodels":
         X_const = sm.add_constant(X)
@@ -57,7 +57,7 @@ if selected_vars:
         st.write("Intercept:", model.intercept_)
 
     # Vizualizácia
-    st.subheader("\U0001F4CA Vizualizácia predikcií")
+    st.subheader("📊 Vizualizácia predikcií")
     fig, ax = plt.subplots(figsize=(10, 4))
     sns.lineplot(x=X.index, y=y, label="Skutočná nezamestnanosť", ax=ax)
     sns.lineplot(x=X.index, y=y_pred, label="Predikovaná nezamestnanosť", ax=ax)
