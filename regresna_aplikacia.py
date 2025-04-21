@@ -26,10 +26,9 @@ df = pd.concat([df, quarter_dummies], axis=1)
 X = df[["hdp_o_std", "Q_2Q", "Q_3Q", "Q_4Q"]].apply(pd.to_numeric, errors="coerce")
 y = pd.to_numeric(df["miera_nezamestanosti"], errors="coerce")
 
-# Odstránenie riadkov s chýbajúcimi hodnotami
-mask = X.notnull().all(axis=1) & y.notnull()
-X = X[mask]
-y = y[mask]
+# Odstránenie riadkov s chýbajúcimi alebo objektovými hodnotami
+X = X.dropna().astype(float)
+y = y.loc[X.index].astype(float)
 
 # OLS model cez statsmodels
 X_const = sm.add_constant(X)
