@@ -23,8 +23,13 @@ quarter_dummies = pd.get_dummies(df["kvartal"], prefix="Q")
 df = pd.concat([df, quarter_dummies], axis=1)
 
 # Pripravené vysvetľujúce premenné
-X = df[["hdp_o_std", "Q_2Q", "Q_3Q", "Q_4Q"]]
-y = df["miera_nezamestanosti"]
+X = df[["hdp_o_std", "Q_2Q", "Q_3Q", "Q_4Q"]].apply(pd.to_numeric, errors="coerce")
+y = pd.to_numeric(df["miera_nezamestanosti"], errors="coerce")
+
+# Odstránenie riadkov s chýbajúcimi hodnotami
+mask = X.notnull().all(axis=1) & y.notnull()
+X = X[mask]
+y = y[mask]
 
 # OLS model cez statsmodels
 X_const = sm.add_constant(X)
@@ -38,8 +43,8 @@ st.text(model.summary())
 st.subheader("Vizualizácia predikovaných a skutočných hodnôt")
 y_pred = model.predict(X_const)
 fig, ax = plt.subplots(figsize=(10, 4))
-sns.lineplot(x=df.index, y=y, label="Skutočná nezamestnanosť", ax=ax)
-sns.lineplot(x=df.index, y=y_pred, label="Predikovaná nezamestnanosť", ax=ax)
+sns.lineplot(x=X.index, y=y, label="Skutočná nezamestnanosť", ax=ax)
+sns.lineplot(x=X.index, y=y_pred, label="Predikovaná nezamestnanosť", ax=ax)
 ax.set_xlabel("Index")
 ax.set_ylabel("Miera nezamestnanosti (%)")
 ax.legend()
