@@ -12,7 +12,7 @@ st.set_page_config(page_title="Ekonomické regresné modely", layout="wide")
 # Vítací nadpis
 st.title("📈 Regresná analýza miery nezamestnanosti")
 st.markdown("""
-Táto aplikácia umožňuje analyzovať mieru nezamestnanosti na základe reálneho HDP a sezónnych efektov.
+Táto aplikácia umožňuje analyzovať mieru nezamestnanosti na základe vybraných makroekonomických ukazovateľov.
 Vyberte požadovanú regresnú knižnicu a premenné v postrannom paneli.
 """)
 
